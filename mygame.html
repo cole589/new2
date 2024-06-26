@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Underwater Snake Game</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #00008B;
+            font-family: Arial, sans-serif;
+        }
+        #gameCanvas {
+            border: 2px solid #00FFFF;
+        }
+        #gameOver {
+            position: absolute;
+            color: #FFFFFF;
+            font-size: 24px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="gameOver">Game Over! Press Space to restart</div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gameOverText = document.getElementById('gameOver');
+
+        const gridSize = 20;
+        const tileCount = 20;
+        let snake = [{ x: 10, y: 10 }];
+        let food = { x: 15, y: 15 };
+        let dx = 0;
+        let dy = 0;
+        let score = 0;
+        let gameRunning = true;
+
+        function drawGame() {
+            if (gameRunning) {
+                clearCanvas();
+                moveSnake();
+                drawFood();
+                drawSnake();
+                drawScore();
+                checkCollision();
+                setTimeout(drawGame, 100);
+            }
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = '#00008B';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function moveSnake() {
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            snake.unshift(head);
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                placeFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function drawFood() {
+            ctx.fillStyle = '#006400'; // Changed to dark green
+            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
+        }
+
+        function drawSnake() {
+            ctx.fillStyle = '#00FF00';
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
+            });
+        }
+
+        function drawScore() {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Score: ${score}`, 10, 30);
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+                gameOver();
+            }
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    gameOver();
+                }
+            }
+        }
+
+        function placeFood() {
+            food.x = Math.floor(Math.random() * tileCount);
+            food.y = Math.floor(Math.random() * tileCount);
+            // Ensure food doesn't spawn on the snake
+            snake.forEach(segment => {
+                if (food.x === segment.x && food.y === segment.y) {
+                    placeFood();
+                }
+            });
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            gameOverText.style.display = 'block';
+        }
+
+        function resetGame() {
+            snake = [{ x: 10, y: 10 }];
+            food = { x: 15, y: 15 };
+            dx = 0;
+            dy = 0;
+            score = 0;
+            gameRunning = true;
+            gameOverText.style.display = 'none';
+            drawGame();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'ArrowUp':
+                    if (dy === 0) { dx = 0; dy = -1; }
+                    break;
+                case 'ArrowDown':
+                    if (dy === 0) { dx = 0; dy = 1; }
+                    break;
+                case 'ArrowLeft':
+                    if (dx === 0) { dx = -1; dy = 0; }
+                    break;
+                case 'ArrowRight':
+                    if (dx === 0) { dx = 1; dy = 0; }
+                    break;
+                case ' ':
+                    if (!gameRunning) resetGame();
+                    break;
+            }
+        });
+
+        drawGame();
+    </script>
+    <h3>instructions</h3>
+    <p>use arrow keys to move </p>
+</body>
+</html>

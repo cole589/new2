@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Speed Dino Game</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f7f7f7;
+            font-family: Arial, sans-serif;
+        }
+        #game {
+            width: 600px;
+            height: 150px;
+            border: 1px solid #000;
+            position: relative;
+            overflow: hidden;
+            background-color: #fff;
+        }
+        #dino {
+            width: 40px;
+            height: 43px;
+            position: absolute;
+            bottom: 0;
+            left: 170px;
+            background-color: #535353;
+        }
+        .cactus {
+            width: 20px;
+            height: 40px;
+            position: absolute;
+            bottom: 0;
+            right: -20px;
+            background-color: #535353;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+        }
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <div id="dino"></div>
+        <div id="score">0</div>
+        <div id="start-screen">Click to Start</div>
+    </div>
+
+    <script>
+        const dino = document.getElementById("dino");
+        const game = document.getElementById("game");
+        const scoreDisplay = document.getElementById("score");
+        const startScreen = document.getElementById("start-screen");
+
+        let isJumping = false;
+        let score = 0;
+        let gameLoop;
+        let cactusInterval;
+        let isGameOver = false;
+        let gameSpeed = 5;
+
+        function jump() {
+            if (!isJumping && !isGameOver) {
+                isJumping = true;
+                let jumpCount = 0;
+                const jumpInterval = setInterval(() => {
+                    const dinoBottom = parseInt(window.getComputedStyle(dino).getPropertyValue("bottom"));
+                    if (jumpCount < 15 && dinoBottom < 100) {
+                        dino.style.bottom = `${dinoBottom + 5}px`;
+                    }
+                    if (jumpCount > 20) {
+                        clearInterval(jumpInterval);
+                        let fallInterval = setInterval(() => {
+                            const dinoBottom = parseInt(window.getComputedStyle(dino).getPropertyValue("bottom"));
+                            if (dinoBottom > 0) {
+                                dino.style.bottom = `${dinoBottom - 5}px`;
+                            } else {
+                                clearInterval(fallInterval);
+                                isJumping = false;
+                            }
+                        }, 20);
+                    }
+                    jumpCount++;
+                }, 20);
+            }
+        }
+
+        function createCactus() {
+            if (!isGameOver) {
+                const cactus = document.createElement("div");
+                cactus.classList.add("cactus");
+                game.appendChild(cactus);
+
+                let cactusPosition = 580;
+                const moveCactus = setInterval(() => {
+                    if (cactusPosition > -20 && !isGameOver) {
+                        cactusPosition -= gameSpeed;
+                        cactus.style.right = `${cactusPosition}px`;
+                    } else {
+                        clearInterval(moveCactus);
+                        if (cactus.parentElement === game) {
+                            game.removeChild(cactus);
+                        }
+                    }
+
+                    const dinoBottom = parseInt(window.getComputedStyle(dino).getPropertyValue("bottom"));
+                    const dinoLeft = parseInt(window.getComputedStyle(dino).getPropertyValue("left"));
+                    const cactusLeft = 600 - cactusPosition - 20;
+
+                    if (cactusLeft < dinoLeft + 40 && cactusLeft + 20 > dinoLeft && dinoBottom < 40) {
+                        clearInterval(moveCactus);
+                        gameOver();
+                    }
+                }, 20);
+            }
+        }
+
+        function updateScore() {
+            if (!isGameOver) {
+                score++;
+                scoreDisplay.textContent = score;
+                gameSpeed = 5 + Math.floor(score / 100); // Increase speed every 100 points
+            }
+        }
+
+        function gameOver() {
+            isGameOver = true;
+            clearInterval(gameLoop);
+            clearInterval(cactusInterval);
+            startScreen.style.display = "flex";
+            startScreen.textContent = `Game Over! Score: ${score}. Click to restart.`;
+        }
+
+        function startGame() {
+            isGameOver = false;
+            score = 0;
+            gameSpeed = 5;
+            scoreDisplay.textContent = score;
+            startScreen.style.display = "none";
+            
+            document.querySelectorAll('.cactus').forEach(cactus => cactus.remove());
+            
+            dino.style.bottom = "0px";
+            
+            gameLoop = setInterval(updateScore, 100);
+            cactusInterval = setInterval(createCactus, 2000);
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.code === "Space") {
+                if (startScreen.style.display !== "none") {
+                    startGame();
+                } else {
+                    jump();
+                }
+                e.preventDefault();
+            }
+        });
+
+        startScreen.addEventListener("click", startGame);
+    </script>
+</body>
+<h4> presse spacebar to jump</h4>
+</html>
